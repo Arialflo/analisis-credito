@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel de resolución · Módulo 3 · Lectura de estados financieros</title>
+<style>
+:root{--nd:#0C1A2B;--n:#142A44;--nl:#1E3A5A;--g:#C49E61;--gl:#E2C594;--t:#3A9E96;--w:#F8F8F6;--gr:#B0BCC8;--mute:#7C8FA4;--ok:#2E8B57;--warn:#D99A2B;--bad:#C8553D}
+*{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px}
+body{background:var(--nd);color:var(--w);font-family:"Segoe UI",Calibri,system-ui,-apple-system,Roboto,Arial,sans-serif;font-size:.95rem;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+h1{font-family:Cambria,Georgia,serif;font-size:1.6rem}
+h2{font-family:Cambria,Georgia,serif;font-size:1.2rem;color:var(--gl);margin-bottom:6px}
+h3{font-size:1rem;color:var(--gl);margin:18px 0 6px}
+.sub{color:var(--gr);font-size:.85rem;margin:4px 0 12px}
+.top{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:12px}
+.top label{display:flex;flex-direction:column;font-size:.78rem;color:var(--gr);gap:3px}
+.top input{width:130px}.top #emp{width:260px}
+.fs{margin-left:auto;display:flex;gap:4px}
+.fs button{background:var(--n);color:var(--w);border:1px solid var(--nl);border-radius:6px;padding:5px 10px;cursor:pointer;font:inherit}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{background:var(--n);color:var(--w);border:1px solid var(--nl);border-radius:8px;padding:8px 12px;cursor:pointer;font:inherit}
+.tabs button[aria-selected=true]{background:var(--g);color:var(--nd);font-weight:700;border-color:var(--g)}
+button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--gl);outline-offset:2px}
+.panel{background:var(--n);border:1px solid var(--nl);border-radius:12px;padding:14px;margin-bottom:12px}
+.pane[hidden]{display:none}
+.tw{overflow-x:auto;margin-top:8px}
+table{border-collapse:collapse;width:100%;font-size:.85rem}
+th,td{padding:5px 8px;border-bottom:1px solid var(--nl);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{background:var(--gl);color:var(--nd)}
+tr.t td{font-weight:700;background:#16304D}
+tr.s td{color:var(--gl);font-weight:700;background:transparent}
+td.cv{color:var(--gl)}
+table.flow th:nth-child(2),table.flow td:nth-child(2){text-align:left}
+input[type=text],select,textarea{background:var(--nd);color:var(--w);border:1px solid var(--nl);border-radius:6px;padding:6px 8px;font:inherit}
+td input.num{width:128px;text-align:right;padding:3px 8px}
+.inl{width:170px;text-align:right}
+textarea{width:100%;min-height:100px;resize:vertical;margin-top:6px}
+.acc{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap;margin:10px 0}
+button.act{background:var(--g);color:var(--nd);border:0;border-radius:8px;padding:9px 16px;cursor:pointer;font:inherit;font-weight:700}
+button.sec{background:var(--n);color:var(--w);border:1px solid var(--g);border-radius:8px;padding:8px 14px;cursor:pointer;font:inherit}
+button.mini{background:var(--n);color:var(--gl);border:1px solid var(--nl);border-radius:6px;padding:4px 8px;cursor:pointer;font:inherit;font-size:.8rem}
+.formula{flex:1;min-width:260px;background:#16304D;border-left:4px solid var(--g);border-radius:6px;padding:8px 12px;color:var(--gl);font-size:.88rem}
+.formula b{color:var(--w)}
+.chip{display:inline-block;padding:2px 8px;border-radius:10px;font-size:.78rem;font-weight:700}
+.ok{background:#1d4a35;color:#9fe0bd}.warn{background:#4d3a12;color:#f3c77b}.bad{background:#4d2018;color:#f5a99a}
+.flag{color:var(--warn);font-weight:700;margin-left:4px}
+.note{font-size:.82rem;color:var(--mute);margin-top:6px}
+.msg{color:var(--gl);margin:8px 0}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}
+.row label{color:var(--gr);font-size:.85rem}
+.box{border-left:5px solid var(--g);background:#16304D;border-radius:8px;padding:10px 12px;margin-top:10px}
+pre.out{white-space:pre-wrap;background:var(--nd);border:1px solid var(--nl);border-radius:8px;padding:12px;font-family:Consolas,"Courier New",monospace;font-size:.85rem;min-height:160px}
+ul.how{margin:8px 0 0 20px}ul.how li{margin:5px 0}
+@media print{body{background:#fff;color:#000}.top,.tabs,.fs,.acc button,.noprint{display:none!important}.pane{display:none}.pane.printing{display:block!important}.panel{background:#fff;border:0}pre.out{border:0;color:#000;background:#fff}}
+</style>
+</head>
+<body>
+<main class="wrap">
+<h1>Panel de resolución · Módulo 3</h1>
+<p class="sub">Lectura de estados financieros · Curso de Análisis Crediticio · Banca Empresas</p>
+
+<div class="top">
+  <label>Empresa<input type="text" id="emp" placeholder="Nombre de la empresa" autocomplete="off"></label>
+  <label>Año 1<input type="text" id="y0" placeholder="Año 1" autocomplete="off"></label>
+  <label>Año 2<input type="text" id="y1" placeholder="Año 2" autocomplete="off"></label>
+  <label>Año 3<input type="text" id="y2" placeholder="Año 3" autocomplete="off"></label>
+  <label>Corte intermedio (opcional)<input type="text" id="y3" placeholder="Corte intermedio" autocomplete="off"></label>
+  <span class="fs" title="Tamaño de letra"><button type="button" id="fm" aria-label="Letra más pequeña">A−</button><button type="button" id="fp" aria-label="Letra más grande">A+</button></span>
+</div>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" aria-selected="true" data-p="p0">Cómo usar</button>
+  <button role="tab" aria-selected="false" data-p="p1">1. Datos</button>
+  <button role="tab" aria-selected="false" data-p="p2">2. Horizontal y vertical</button>
+  <button role="tab" aria-selected="false" data-p="p3">3. De la utilidad a la caja</button>
+  <button role="tab" aria-selected="false" data-p="p4">4. Validación</button>
+  <button role="tab" aria-selected="false" data-p="p5">5. Mi análisis</button>
+</nav>
+
+<!-- 0 · CÓMO USAR -->
+<section class="pane" id="p0"><div class="panel">
+  <h2>Cómo usar este panel</h2>
+  <p>Este panel está vacío a propósito: eres tú quien lo llena con las cifras de los documentos del caso y quien interpreta los resultados.</p>
+  <ul class="how">
+    <li><b>Paso 1.</b> En «1. Datos» escribe las cifras tal como aparecen en los estados financieros. Puedes usar puntos de miles y coma decimal.</li>
+    <li><b>Paso 2.</b> En cada ejercicio, pulsa el botón de calcular. Al lado verás siempre la <b>fórmula</b> que se aplicó, para que sepas de dónde sale cada resultado.</li>
+    <li><b>Paso 3.</b> Escribe tu interpretación en el cuadro de texto de cada ejercicio. Los números muestran qué pasó; el análisis explica por qué importa.</li>
+    <li><b>Paso 4.</b> En «5. Mi análisis» reúnes todo, lo descargas o lo copias.</li>
+  </ul>
+  <p class="note">Tus datos y tus textos se guardan solo en este navegador, de forma automática, y no se envían a ningún sitio. Si usas un computador compartido, pulsa «Borrar todo» en la última pestaña al terminar. Si algún botón de descarga no responde, abre este panel en una pestaña nueva desde su enlace.</p>
+  <p class="note">Las herramientas y los umbrales dependen de cada institución: lo que importa es entender el análisis y los números más allá de la herramienta que se use.</p>
+</div></section>
+
+<!-- 1 · DATOS -->
+<section class="pane" id="p1" hidden><div class="panel">
+  <h2>1. Datos de los estados financieros</h2>
+  <p class="note">Escribe cada cifra como aparece en los documentos. Los totales se calculan al pulsar el botón.</p>
+  <div class="tw"><table id="tb"></table></div>
+  <div class="tw"><table id="te"></table></div>
+  <div class="acc">
+    <button type="button" class="act" id="b_tot">Calcular totales y comprobar el cuadre</button>
+    <div class="formula">
+      <b>Activo corriente</b> = efectivo + cuentas por cobrar (clientes y relacionadas) + inventarios + otros activos corrientes<br>
+      <b>Total activo</b> = activo corriente + propiedad, planta y equipo + otros no corrientes<br>
+      <b>Total pasivo</b> = proveedores + deuda corto plazo + obligaciones laborales y tributarias + deuda largo plazo + jubilación patronal<br>
+      <b>Patrimonio</b> = capital + aportes + reserva legal + resultados acumulados + resultado del ejercicio<br>
+      <b>Cuadre:</b> total activo − (total pasivo + patrimonio) = 0
+      <br><br>
+      <b>Utilidad bruta</b> = ventas − costo de ventas · <b>EBITDA</b> = utilidad bruta − gastos de venta − gastos administrativos · <b>Utilidad operacional</b> = EBITDA − depreciación y amortización · <b>Utilidad antes de impuestos</b> = utilidad operacional − gastos financieros + otros ingresos · <b>Utilidad neta</b> = utilidad antes de impuestos − participación de trabajadores − impuesto a la renta
+    </div>
+  </div>
+  <div id="o_tot"></div>
+</div></section>
+
+<!-- 2 · EJERCICIO 1 -->
+<section class="pane" id="p2" hidden><div class="panel">
+  <h2>Ejercicio 1 · Análisis horizontal y vertical</h2>
+
+  <h3>A. Análisis horizontal: ¿cuánto cambió cada cuenta?</h3>
+  <div class="acc">
+    <button type="button" class="act" id="b_h">Calcular variación</button>
+    <div class="formula"><b>Variación %</b> = (valor del año ÷ valor del año anterior) − 1<br>La marca ▲ indica que una cuenta (o la deuda total) crece <b>más rápido que las ventas</b> en ese período y pide una explicación.</div>
+  </div>
+  <div id="o_h"></div>
+
+  <h3>B. Análisis vertical: ¿cuánto pesa cada cuenta?</h3>
+  <div class="acc">
+    <button type="button" class="act" id="b_v">Calcular peso de cada cuenta</button>
+    <div class="formula"><b>Estado de resultados:</b> peso % = cuenta ÷ ventas<br><b>Balance general:</b> peso % = cuenta ÷ total activo</div>
+  </div>
+  <div id="o_v"></div>
+
+  <h3>C. Márgenes y su tendencia</h3>
+  <div class="acc">
+    <button type="button" class="act" id="b_m">Calcular márgenes</button>
+    <div class="formula"><b>Margen bruto</b> = utilidad bruta ÷ ventas · <b>Margen EBITDA</b> = EBITDA ÷ ventas · <b>Margen neto</b> = utilidad neta ÷ ventas</div>
+  </div>
+  <div id="o_m"></div>
+
+  <h3>Tus tres hallazgos, en tus palabras</h3>
+  <textarea id="ta_h" placeholder="1.&#10;2.&#10;3."></textarea>
+</div></section>
+
+<!-- 3 · EJERCICIO 2 -->
+<section class="pane" id="p3" hidden><div class="panel">
+  <h2>Ejercicio 2 · De la utilidad a la caja (método indirecto)</h2>
+  <div class="row"><label for="fy">Período a analizar:</label><select id="fy"></select>
+  <label for="div_f">Dividendos pagados u otros retiros de los socios (si no hay, déjalo vacío):</label><input type="text" class="inl" id="div_f" inputmode="decimal" autocomplete="off"></div>
+  <div class="acc">
+    <button type="button" class="act" id="b_f">Construir el flujo</button>
+    <div class="formula"><b>Flujo de operación</b> = utilidad neta + depreciación − aumento de activos corrientes operativos + aumento de pasivos operativos<br><b>Inversión</b> = − compra de activos fijos − préstamos a relacionadas<br><b>Financiamiento</b> = aumento de deuda financiera + aportes de socios − dividendos<br><b>Comprobación:</b> operación + inversión + financiamiento = cambio de caja del balance</div>
+  </div>
+  <div id="o_f"></div>
+  <h3>Explica el resultado en tus palabras</h3>
+  <textarea id="ta_f" placeholder="¿Qué te dice el paso de la utilidad a la caja sobre esta empresa?"></textarea>
+</div></section>
+
+<!-- 4 · EJERCICIO 3 -->
+<section class="pane" id="p4" hidden><div class="panel">
+  <h2>Ejercicio 3 · Valida la información</h2>
+  <p class="note">En la práctica se cruza cada dato con otra fuente. Cuida siempre que las fechas de cada documento sean comparables.</p>
+
+  <h3>A. Deuda: central de riesgos, detalle del cliente y balance</h3>
+  <div class="row"><label for="v_cr">Según la central de riesgos</label><input type="text" class="inl" id="v_cr" inputmode="decimal" autocomplete="off">
+  <label for="v_det">Según el detalle de obligaciones del cliente</label><input type="text" class="inl" id="v_det" inputmode="decimal" autocomplete="off"></div>
+  <div class="row"><label for="v_col">Deuda del balance al cierre de:</label><select id="v_col"></select>
+  <button type="button" class="mini" id="b_vt">Traer del balance</button><input type="text" class="inl" id="v_bal" inputmode="decimal" autocomplete="off" aria-label="Deuda según el balance"></div>
+  <div class="acc">
+    <button type="button" class="act" id="b_vd">Comparar deuda</button>
+    <div class="formula"><b>Diferencia</b> = fuente A − fuente B<br><b>Diferencia %</b> = diferencia ÷ fuente B</div>
+  </div>
+  <div id="o_vd"></div>
+
+  <h3>B. Ventas: declaraciones de impuestos contra estados financieros</h3>
+  <div class="row"><label for="v_iva">Ventas según las declaraciones de IVA</label><input type="text" class="inl" id="v_iva" inputmode="decimal" autocomplete="off">
+  <label for="v_vy">Año de los estados:</label><select id="v_vy"></select>
+  <label for="v_tol">Diferencia que consideras razonable (%) — opcional</label><input type="text" class="inl" id="v_tol" inputmode="decimal" autocomplete="off" style="width:90px"></div>
+  <div class="acc">
+    <button type="button" class="act" id="b_vv">Comparar ventas</button>
+    <div class="formula"><b>Diferencia</b> = ventas según IVA − ventas según estados<br><b>Diferencia %</b> = diferencia ÷ ventas según estados</div>
+  </div>
+  <div id="o_vv"></div>
+
+  <h3>C. Patrimonio ajustado</h3>
+  <div class="row"><label for="v_py">Patrimonio al cierre de:</label><select id="v_py"></select></div>
+  <div class="row"><label for="aj_rel">Cuentas por cobrar a relacionadas sin plan de pago</label><input type="text" class="inl" id="aj_rel" inputmode="decimal" autocomplete="off"><button type="button" class="mini" id="b_ar">Usar saldo del balance</button></div>
+  <div class="row"><label for="aj_rev">Revaluaciones de activos sin sustento</label><input type="text" class="inl" id="aj_rev" inputmode="decimal" autocomplete="off"></div>
+  <div class="row"><label for="aj_apo">Aportes para futuras capitalizaciones no formalizados</label><input type="text" class="inl" id="aj_apo" inputmode="decimal" autocomplete="off"><button type="button" class="mini" id="b_aa">Usar saldo del balance</button></div>
+  <div class="acc">
+    <button type="button" class="act" id="b_vp">Calcular patrimonio ajustado</button>
+    <div class="formula"><b>Patrimonio ajustado</b> = patrimonio contable − (relacionadas sin plan de pago + revaluaciones sin sustento + aportes no formalizados)</div>
+  </div>
+  <div id="o_vp"></div>
+
+  <h3>D. Deuda contra ventas</h3>
+  <div class="acc">
+    <button type="button" class="act" id="b_vc">Comparar crecimiento</button>
+    <div class="formula"><b>Variación %</b> = (valor del año ÷ valor del año anterior) − 1, para la deuda financiera total y para las ventas</div>
+  </div>
+  <div id="o_vc"></div>
+
+  <h3>E. Informe del auditor</h3>
+  <textarea id="ta_aud" placeholder="¿Sobre qué te advierte el informe del auditor?"></textarea>
+
+  <h3>Las diferencias que encontraste al validar</h3>
+  <textarea id="ta_v" placeholder="¿Qué cruces no coinciden y por qué crees que pasa?"></textarea>
+
+  <h3>Tus preguntas y los documentos que le pedirías al oficial de negocios</h3>
+  <textarea id="ta_q" placeholder="Preguntas:&#10;Documentos:"></textarea>
+</div></section>
+
+<!-- 5 · MI ANÁLISIS -->
+<section class="pane" id="p5" hidden><div class="panel">
+  <h2>Mi análisis</h2>
+  <p class="note noprint">Aquí se reúne lo que escribiste y los resultados que calculaste. Revísalo antes de descargarlo.</p>
+  <div class="acc noprint">
+    <button type="button" class="act" id="b_comp">Actualizar</button>
+    <button type="button" class="sec" id="b_dl">Descargar (.txt)</button>
+    <button type="button" class="sec" id="b_cp">Copiar</button>
+    <button type="button" class="sec" id="b_pr">Imprimir o guardar en PDF</button>
+    <button type="button" class="sec" id="b_clr">Borrar todo</button>
+  </div>
+  <p class="msg" id="msg5"></p>
+  <pre class="out" id="out5"></pre>
+</div></section>
+</main>
+
+<script>
+(function(){
+'use strict';
+const $=id=>document.getElementById(id);
+
+/* ---------- Cuentas ---------- */
+const BAL=[
+ {s:'ACTIVO'},
+ {k:'caja',l:'Efectivo'},{k:'cxc',l:'Cuentas por cobrar a clientes'},{k:'rel',l:'Cuentas por cobrar a relacionadas'},
+ {k:'inv',l:'Inventarios'},{k:'otros',l:'Otros activos corrientes'},{k:'ac',l:'Activo corriente',t:1},
+ {k:'ppe',l:'Propiedad, planta y equipo'},{k:'ancotros',l:'Otros activos no corrientes'},{k:'act',l:'TOTAL ACTIVO',t:1},
+ {s:'PASIVO Y PATRIMONIO'},
+ {k:'prov',l:'Proveedores'},{k:'dcp',l:'Deuda financiera de corto plazo'},{k:'obl',l:'Obligaciones laborales y tributarias'},
+ {k:'dlp',l:'Deuda financiera de largo plazo'},{k:'jub',l:'Jubilación patronal'},{k:'pas',l:'TOTAL PASIVO',t:1},
+ {k:'cap',l:'Capital'},{k:'aport',l:'Aportes para futuras capitalizaciones'},{k:'rleg',l:'Reserva legal'},
+ {k:'acum',l:'Resultados acumulados'},{k:'un',l:'Resultado del ejercicio'},{k:'pat',l:'PATRIMONIO',t:1},
+ {k:'deuda',l:'Deuda financiera total (corto + largo plazo)',t:1,d:1}
+];
+const ER=[
+ {k:'ventas',l:'Ventas netas'},{k:'costo',l:'Costo de ventas'},{k:'ub',l:'Utilidad bruta',t:1},
+ {k:'gv',l:'Gastos de venta'},{k:'ga',l:'Gastos administrativos'},{k:'ebitda',l:'EBITDA',t:1},
+ {k:'dep',l:'Depreciación y amortización'},{k:'ebit',l:'Utilidad operacional',t:1},
+ {k:'gf',l:'Gastos financieros'},{k:'oi',l:'Otros ingresos'},{k:'uai',l:'Utilidad antes de impuestos',t:1},
+ {k:'pt',l:'Participación de trabajadores'},{k:'ir',l:'Impuesto a la renta'},{k:'un',l:'Utilidad neta',t:1}
+];
+const TOTB={ac:['caja','cxc','rel','inv','otros'],act:['ac','ppe','ancotros'],pas:['prov','dcp','obl','dlp','jub'],pat:['cap','aport','rleg','acum','un'],deuda:['dcp','dlp']};
+
+/* ---------- Utilidades ---------- */
+function parseNum(s){
+  if(s==null) return NaN; s=String(s).trim(); if(!s) return NaN;
+  let neg=false;
+  if(/^\(.*\)$/.test(s)){neg=true;s=s.slice(1,-1);}
+  s=s.replace(/usd|us\$|\$|\s/gi,'');
+  if(s[0]==='-'||s[0]==='−'){neg=true;s=s.slice(1);}
+  if(!/^[0-9.,]+$/.test(s)) return NaN;
+  const hasDot=s.indexOf('.')>=0,hasCom=s.indexOf(',')>=0;let t;
+  if(hasDot&&hasCom){const dec=s.lastIndexOf(',')>s.lastIndexOf('.')?',':'.';const th=dec===','?'.':',';t=s.split(th).join('').replace(dec,'.');}
+  else if(hasDot||hasCom){
+    const sep=hasDot?'.':',';const parts=s.split(sep);
+    if(parts.length>2) t=parts.join('');
+    else if(parts[1].length===3&&parts[0].length>=1&&parts[0].length<=3&&parts[0]!=='0') t=parts.join('');
+    else t=parts[0]+'.'+parts[1];
+  } else t=s;
+  const v=parseFloat(t);return isNaN(v)?NaN:(neg?-v:v);
+}
+function fmt(v,d){d=d||0;if(!isFinite(v))return '—';const neg=v<0;const a=Math.abs(v).toFixed(d).split('.');const i=a[0].replace(/\B(?=(\d{3})+(?!\d))/g,'.');return (neg&&(Number(a.join(''))!==0)?'−':'')+i+(a[1]?','+a[1]:'');}
+function fmtAuto(v){return fmt(v,Number.isInteger(v)?0:2);}
+function pct(v,d){d=d==null?1:d;if(!isFinite(v))return '—';const a=Math.abs(v*100).toFixed(d).replace('.',',');return (v<0&&Number(a.replace(',','.'))!==0?'−':'')+a+'%';}
+function pp(v){if(!isFinite(v))return '—';const x=Math.abs(v*100);const a=x.toFixed(1).replace('.',',');return (x<0.05?'':(v<0?'−':'+'))+a+' pp';}
+function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function lab(i){const v=$('y'+i).value.trim();return v||(i===3?'Corte intermedio':'Año '+(i+1));}
+function chip(c,t){return '<span class="chip '+c+'">'+t+'</span>';}
+function textOf(h){const d=document.createElement('div');d.innerHTML=h;return d.textContent;}
+function tableHTML(head,rows,cls){
+  return '<div class="tw"><table class="'+(cls||'')+'"><thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+
+   rows.map(r=>r.sec?'<tr class="s"><td colspan="'+head.length+'">'+r.sec+'</td></tr>':'<tr class="'+(r.cls||'')+'">'+r.c.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+}
+function tableText(head,rows){
+  return [head.join(' | ')].concat(rows.map(r=>r.sec?('— '+r.sec+' —'):r.c.map(textOf).join(' | '))).join('\n');
+}
+const last={h:'',v:'',m:'',f:'',vd:'',vv:'',vp:'',vc:''};
+
+/* ---------- Lectura de datos ---------- */
+function raw(kind,k,i){const el=$(kind+'_'+k+'_'+i);return el?parseNum(el.value):NaN;}
+function colHas(kind,i){return (kind==='b'?BAL:ER).some(r=>!r.t&&!r.s&&isFinite(raw(kind,r.k,i)));}
+function B(k,i){
+  if(!colHas('b',i)) return NaN;
+  if(TOTB[k]) return TOTB[k].reduce((s,q)=>s+(B(q,i)||0),0);
+  return raw('b',k,i);
+}
+function E(k,i){
+  if(!colHas('e',i)) return NaN;
+  const g=q=>E(q,i)||0;
+  switch(k){
+    case 'ub':return g('ventas')-g('costo');
+    case 'ebitda':return g('ub')-g('gv')-g('ga');
+    case 'ebit':return g('ebitda')-g('dep');
+    case 'uai':return g('ebit')-g('gf')+g('oi');
+    case 'un':return g('uai')-g('pt')-g('ir');
+    default:return raw('e',k,i);
+  }
+}
+const n0=v=>isFinite(v)?v:0;
+
+/* ---------- Construcción de tablas de datos ---------- */
+function buildData(){
+  let h='<thead><tr><th>Balance general</th>'+[0,1,2,3].map(i=>'<th class="yl" data-i="'+i+'">'+esc(lab(i))+'</th>').join('')+'</tr></thead><tbody>';
+  BAL.forEach(r=>{
+    if(r.d) return;
+    if(r.s){h+='<tr class="s"><td colspan="5">'+r.s+'</td></tr>';return;}
+    h+='<tr class="'+(r.t?'t':'')+'"><td>'+r.l+'</td>'+[0,1,2,3].map(i=>r.t?'<td class="cv" id="t_b_'+r.k+'_'+i+'">—</td>':'<td><input type="text" class="num" inputmode="decimal" autocomplete="off" id="b_'+r.k+'_'+i+'" aria-label="'+r.l+'"></td>').join('')+'</tr>';
+  });
+  $('tb').innerHTML=h+'</tbody>';
+  h='<thead><tr><th>Estado de resultados</th>'+[0,1,2].map(i=>'<th class="yl" data-i="'+i+'">'+esc(lab(i))+'</th>').join('')+'</tr></thead><tbody>';
+  ER.forEach(r=>{
+    h+='<tr class="'+(r.t?'t':'')+'"><td>'+r.l+'</td>'+[0,1,2].map(i=>r.t?'<td class="cv" id="t_e_'+r.k+'_'+i+'">—</td>':'<td><input type="text" class="num" inputmode="decimal" autocomplete="off" id="e_'+r.k+'_'+i+'" aria-label="'+r.l+'"></td>').join('')+'</tr>';
+  });
+  $('te').innerHTML=h+'</tbody>';
+}
+function refreshLabels(){
+  document.querySelectorAll('.yl').forEach(th=>{th.textContent=lab(+th.dataset.i);});
+  const fill=(id,vals)=>{const s=$(id),keep=s.value;s.innerHTML=vals.map(v=>'<option value="'+v[0]+'">'+esc(v[1])+'</option>').join('');if(keep&&[...s.options].some(o=>o.value===keep))s.value=keep;};
+  fill('fy',[[1,lab(1)+' contra '+lab(0)],[2,lab(2)+' contra '+lab(1)]]);
+  fill('v_col',[0,1,2,3].map(i=>[i,lab(i)]));
+  fill('v_vy',[0,1,2].map(i=>[i,lab(i)]));
+  fill('v_py',[0,1,2,3].map(i=>[i,lab(i)]));
+}
+
+/* ---------- 1. Totales y cuadre ---------- */
+function runTot(){
+  let out='<div class="box">';const msgs=[];
+  [0,1,2,3].forEach(i=>{
+    BAL.forEach(r=>{if(r.t&&!r.d){const c=$('t_b_'+r.k+'_'+i);if(c)c.textContent=colHas('b',i)?fmtAuto(B(r.k,i)):'—';}});
+    if(colHas('b',i)){
+      const d=B('act',i)-(B('pas',i)+B('pat',i));
+      msgs.push('<b>Balance '+esc(lab(i))+':</b> '+(Math.abs(d)<=1?chip('ok','Cuadra'):chip('bad','Descuadre de '+fmtAuto(d)+': revisa las cifras')));
+    }
+  });
+  [0,1,2].forEach(i=>{
+    ER.forEach(r=>{if(r.t){const c=$('t_e_'+r.k+'_'+i);if(c)c.textContent=colHas('e',i)?fmtAuto(E(r.k,i)):'—';}});
+    if(colHas('e',i)&&isFinite(raw('b','un',i))){
+      const d=E('un',i)-raw('b','un',i);
+      msgs.push('<b>Utilidad neta '+esc(lab(i))+' contra resultado del ejercicio del balance:</b> '+(Math.abs(d)<=1?chip('ok','Coinciden'):chip('warn','Difieren en '+fmtAuto(d)+': revisa')));
+    }
+  });
+  $('o_tot').innerHTML=msgs.length?out+msgs.join('<br>')+'</div>':'<p class="msg">Primero escribe cifras en las casillas de arriba.</p>';
+}
+
+/* ---------- 2. Horizontal, vertical, márgenes ---------- */
+function runH(){
+  const pairs=[[0,1],[1,2]];
+  const gv=pairs.map(p=>{const a=E('ventas',p[0]),b=E('ventas',p[1]);return(isFinite(a)&&a>0&&isFinite(b))?b/a-1:NaN;});
+  if(gv.every(v=>!isFinite(v))){$('o_h').innerHTML='<p class="msg">Primero llena las ventas de al menos dos años en «1. Datos».</p>';return;}
+  const head=['Cuenta',esc(lab(1))+' contra '+esc(lab(0)),esc(lab(2))+' contra '+esc(lab(1))];
+  const rowH=(kind,r)=>{
+    const F=kind==='b'?B:E;
+    const c=pairs.map((p,j)=>{
+      const a=F(r.k,p[0]),b=F(r.k,p[1]);
+      const v=(isFinite(a)&&a>0&&isFinite(b))?b/a-1:NaN;
+      const flag=r.k!=='ventas'&&(!r.t||r.k==='deuda')&&isFinite(v)&&isFinite(gv[j])&&v>gv[j]+1e-9;
+      return pct(v)+(flag?'<span class="flag" title="Crece más que las ventas">▲</span>':'');
+    });
+    return {c:[r.l].concat(c),cls:r.t?'t':''};
+  };
+  const rows=[{sec:'Balance general'}];
+  BAL.forEach(r=>{if(!r.s)rows.push(rowH('b',r));});
+  rows.push({sec:'Estado de resultados'});
+  ER.forEach(r=>rows.push(rowH('e',r)));
+  $('o_h').innerHTML=tableHTML(head,rows)+'<p class="note">Crecimiento de las ventas: '+esc(lab(1))+' contra '+esc(lab(0))+': <b>'+pct(gv[0])+'</b> · '+esc(lab(2))+' contra '+esc(lab(1))+': <b>'+pct(gv[1])+'</b>. ▲ = crece más que las ventas.</p>';
+  last.h='ANÁLISIS HORIZONTAL (variación %)\n'+tableText(head.map(textOf),rows);
+}
+function runV(){
+  const cb=[0,1,2,3].filter(i=>colHas('b',i)),ce=[0,1,2].filter(i=>colHas('e',i));
+  if(!cb.length&&!ce.length){$('o_v').innerHTML='<p class="msg">Primero llena los datos en «1. Datos».</p>';return;}
+  let html='',txt='';
+  if(ce.length){
+    const head=['Estado de resultados (% de ventas)'].concat(ce.map(i=>esc(lab(i))));
+    const rows=ER.map(r=>({c:[r.l].concat(ce.map(i=>pct(E(r.k,i)/E('ventas',i)))),cls:r.t?'t':''}));
+    html+=tableHTML(head,rows);txt+='ANÁLISIS VERTICAL · Estado de resultados (% de ventas)\n'+tableText(head.map(textOf),rows)+'\n\n';
+  }
+  if(cb.length){
+    const head=['Balance general (% del total activo)'].concat(cb.map(i=>esc(lab(i))));
+    const rows=BAL.filter(r=>!r.s).map(r=>({c:[r.l].concat(cb.map(i=>pct(B(r.k,i)/B('act',i)))),cls:r.t?'t':''}));
+    html+=tableHTML(head,rows);txt+='ANÁLISIS VERTICAL · Balance general (% del total activo)\n'+tableText(head.map(textOf),rows);
+  }
+  $('o_v').innerHTML=html;last.v=txt;
+}
+function runM(){
+  const ce=[0,1,2].filter(i=>colHas('e',i));
+  if(!ce.length){$('o_m').innerHTML='<p class="msg">Primero llena el estado de resultados en «1. Datos».</p>';return;}
+  const defs=[['Margen bruto','ub'],['Margen EBITDA','ebitda'],['Margen neto','un']];
+  const head=['Margen'].concat(ce.map(i=>esc(lab(i)))).concat(ce.length>1?['Cambio entre el primer y el último año']:[]);
+  const rows=defs.map(d=>{
+    const vals=ce.map(i=>E(d[1],i)/E('ventas',i));
+    return {c:[d[0]].concat(vals.map(v=>pct(v))).concat(ce.length>1?[pp(vals[vals.length-1]-vals[0])]:[])};
+  });
+  $('o_m').innerHTML=tableHTML(head,rows)+'<p class="note">pp = puntos porcentuales. ¿Qué tendencia ves? Anótalo en tus hallazgos.</p>';
+  last.m='MÁRGENES\n'+tableText(head.map(textOf),rows);
+}
+
+/* ---------- 3. Utilidad a caja (método indirecto) ---------- */
+function runF(){
+  const i=parseInt($('fy').value,10),a=i-1;
+  if(!(colHas('b',a)&&colHas('b',i)&&colHas('e',i))){
+    $('o_f').innerHTML='<p class="msg">Para este período necesitas el balance de '+esc(lab(a))+' y de '+esc(lab(i))+', y el estado de resultados de '+esc(lab(i))+'. Llénalos en «1. Datos».</p>';return;
+  }
+  const g=(k,j)=>n0(B(k,j)),d=k=>g(k,i)-g(k,a);
+  const div=n0(parseNum($('div_f').value));
+  const op=[
+    ['Utilidad neta','del estado de resultados',E('un',i)],
+    ['+ Depreciación y amortización (no es salida de dinero)','del estado de resultados',E('dep',i)],
+    ['− Aumento de cuentas por cobrar a clientes','−(saldo actual − saldo anterior)',-d('cxc')],
+    ['− Aumento de inventarios','−(saldo actual − saldo anterior)',-d('inv')],
+    ['− Aumento de otros activos corrientes','−(saldo actual − saldo anterior)',-d('otros')],
+    ['+ Aumento de proveedores','+(saldo actual − saldo anterior)',d('prov')],
+    ['+ Aumento de obligaciones laborales y tributarias','+(saldo actual − saldo anterior)',d('obl')],
+    ['+ Aumento de jubilación patronal','+(saldo actual − saldo anterior)',d('jub')]
+  ];
+  const inv=[
+    ['− Compra de activos fijos','−[(PP&E actual − PP&E anterior) + depreciación]',-(d('ppe')+n0(E('dep',i)))],
+    ['− Préstamos a empresas relacionadas','−(cuentas por cobrar a relacionadas: actual − anterior)',-d('rel')],
+    ['− Aumento de otros activos no corrientes','−(saldo actual − saldo anterior)',-d('ancotros')]
+  ];
+  const fin=[
+    ['+ Aumento neto de la deuda financiera','(deuda corto + largo plazo) actual − anterior',d('deuda')],
+    ['+ Aportes de los socios','Δ capital + Δ aportes para futuras capitalizaciones',d('cap')+d('aport')],
+    ['− Dividendos pagados u otros retiros','el monto que escribiste arriba',-div]
+  ];
+  const S=l=>l.reduce((s,x)=>s+n0(x[2]),0);
+  const tOp=S(op),tIn=S(inv),tFi=S(fin),tot=tOp+tIn+tFi;
+  const dCaja=g('caja',i)-g('caja',a),dif=tot-dCaja;
+  const rows=[];
+  const block=(t,ls,tt,lbl)=>{rows.push({sec:t});ls.forEach(x=>rows.push({c:[x[0],'<span class="note" style="margin:0">'+x[1]+'</span>',fmtAuto(x[2])]}));rows.push({cls:'t',c:[lbl,'',fmtAuto(tt)]});};
+  block('A. Operación',op,tOp,'Flujo de operación');
+  block('B. Inversión',inv,tIn,'Flujo de inversión');
+  block('C. Financiamiento',fin,tFi,'Flujo de financiamiento');
+  rows.push({sec:'D. Comprobación'});
+  rows.push({cls:'t',c:['Cambio de caja según el flujo','suma de A + B + C',fmtAuto(tot)]});
+  rows.push({c:['Cambio de caja según el balance','caja '+esc(lab(i))+' − caja '+esc(lab(a))+' ('+fmtAuto(g('caja',a))+' a '+fmtAuto(g('caja',i))+')',fmtAuto(dCaja)]});
+  rows.push({cls:'t',c:['Diferencia','flujo − balance',fmtAuto(dif)]});
+  const head=['Concepto','Cómo se calcula','Valor'];
+  const ok=Math.abs(dif)<=1;
+  $('o_f').innerHTML=tableHTML(head,rows,'flow')+'<div class="box">'+(ok?chip('ok','El flujo cuadra con el cambio de caja del balance'):chip('bad','No cuadra: te falta algo, búscalo (dividendos, otros activos o pasivos, cifras mal digitadas)'))+
+    '<br><br><b>Utilidad neta:</b> '+fmtAuto(E('un',i))+' · <b>Flujo de operación:</b> '+fmtAuto(tOp)+' · <b>Diferencia:</b> '+fmtAuto(E('un',i)-tOp)+'</div>';
+  last.f='DE LA UTILIDAD A LA CAJA · '+lab(i)+' (método indirecto)\n'+tableText(head,rows)+'\nResultado: '+(ok?'cuadra con el cambio de caja del balance':'NO cuadra (diferencia '+fmtAuto(dif)+')');
+}
+
+/* ---------- 4. Validación ---------- */
+function runVT(){const c=parseInt($('v_col').value,10),v=B('deuda',c);if(isFinite(v))$('v_bal').value=fmtAuto(v);}
+function runVD(){
+  const A=[['Central de riesgos',parseNum($('v_cr').value)],['Detalle del cliente',parseNum($('v_det').value)],['Balance',parseNum($('v_bal').value)]];
+  const pairs=[[0,1],[0,2],[1,2]];const rows=[];
+  pairs.forEach(p=>{
+    const a=A[p[0]][1],b=A[p[1]][1];
+    if(isFinite(a)&&isFinite(b)){const dif=a-b,pc=b!==0?dif/b:NaN;rows.push({c:[A[p[0]][0]+' contra '+A[p[1]][0],fmtAuto(a),fmtAuto(b),fmtAuto(dif),pct(pc),Math.abs(dif)<=1?chip('ok','Coincide'):chip('warn','Diferencia')]});}
+  });
+  if(!rows.length){$('o_vd').innerHTML='<p class="msg">Escribe al menos dos de las tres cifras de deuda.</p>';return;}
+  const head=['Comparación','Fuente A','Fuente B','Diferencia','Diferencia %','Resultado'];
+  $('o_vd').innerHTML=tableHTML(head,rows)+'<p class="note">Antes de concluir, revisa que las tres cifras estén a la misma fecha.</p>';
+  last.vd='DEUDA: CENTRAL DE RIESGOS, DETALLE Y BALANCE\n'+tableText(head,rows);
+}
+function runVV(){
+  const iva=parseNum($('v_iva').value),y=parseInt($('v_vy').value,10),est=E('ventas',y),tol=parseNum($('v_tol').value);
+  if(!isFinite(iva)||!isFinite(est)){$('o_vv').innerHTML='<p class="msg">Escribe las ventas según el IVA y llena las ventas del año elegido en «1. Datos».</p>';return;}
+  const dif=iva-est,pc=est!==0?dif/est:NaN;
+  let res=chip('warn','Compara con tu criterio');
+  if(isFinite(tol))res=Math.abs(pc*100)<=tol?chip('ok','Dentro de lo que consideras razonable'):chip('bad','Fuera de lo que consideras razonable');
+  const head=['Ventas según IVA','Ventas según estados ('+esc(lab(y))+')','Diferencia','Diferencia %','Resultado'];
+  const rows=[{c:[fmtAuto(iva),fmtAuto(est),fmtAuto(dif),pct(pc),res]}];
+  $('o_vv').innerHTML=tableHTML(head,rows);
+  last.vv='VENTAS: IVA CONTRA ESTADOS\n'+tableText(head.map(textOf),rows);
+}
+function runAR(){const v=B('rel',parseInt($('v_py').value,10));if(isFinite(v))$('aj_rel').value=fmtAuto(v);}
+function runAA(){const v=B('aport',parseInt($('v_py').value,10));if(isFinite(v))$('aj_apo').value=fmtAuto(v);}
+function runVP(){
+  const c=parseInt($('v_py').value,10),pat=B('pat',c);
+  if(!isFinite(pat)){$('o_vp').innerHTML='<p class="msg">Llena el balance de ese período en «1. Datos».</p>';return;}
+  const r=n0(parseNum($('aj_rel').value)),v=n0(parseNum($('aj_rev').value)),a=n0(parseNum($('aj_apo').value));
+  const aj=r+v+a,adj=pat-aj;
+  const head=['Concepto','Valor'];
+  const rows=[{c:['Patrimonio contable ('+esc(lab(c))+')',fmtAuto(pat)]},{c:['− Cuentas por cobrar a relacionadas sin plan de pago',fmtAuto(r)]},{c:['− Revaluaciones de activos sin sustento',fmtAuto(v)]},{c:['− Aportes para futuras capitalizaciones no formalizados',fmtAuto(a)]},{cls:'t',c:['Patrimonio ajustado',fmtAuto(adj)]},{c:['Ajustes como % del patrimonio contable',pct(pat!==0?aj/pat:NaN)]}];
+  $('o_vp').innerHTML=tableHTML(head,rows);
+  last.vp='PATRIMONIO AJUSTADO\n'+tableText(head.map(textOf),rows);
+}
+function runVC(){
+  const pairs=[[0,1],[1,2]];
+  const vr=(F,k)=>pairs.map(p=>{const a=F(k,p[0]),b=F(k,p[1]);return(isFinite(a)&&a>0&&isFinite(b))?b/a-1:NaN;});
+  const dd=vr(B,'deuda'),vv=vr(E,'ventas');
+  if(dd.every(v=>!isFinite(v))||vv.every(v=>!isFinite(v))){$('o_vc').innerHTML='<p class="msg">Llena la deuda (balance) y las ventas de al menos dos años en «1. Datos».</p>';return;}
+  const head=['','Variación '+esc(lab(1))+' contra '+esc(lab(0)),'Variación '+esc(lab(2))+' contra '+esc(lab(1))];
+  const res=dd.map((v,j)=>isFinite(v)&&isFinite(vv[j])?(v>vv[j]+1e-9?chip('warn','La deuda crece más que las ventas'):chip('ok','La deuda no crece más que las ventas')):'—');
+  const rows=[{c:['Deuda financiera total',pct(dd[0]),pct(dd[1])]},{c:['Ventas netas',pct(vv[0]),pct(vv[1])]},{c:['Resultado',res[0],res[1]]}];
+  $('o_vc').innerHTML=tableHTML(head,rows);
+  last.vc='DEUDA CONTRA VENTAS\n'+tableText(head.map(textOf),rows);
+}
+
+/* ---------- 5. Mi análisis ---------- */
+function sec(t,body){const b=(body||'').trim();return t+'\n'+(b||'(sin completar)')+'\n\n';}
+function compile(){
+  const emp=$('emp').value.trim()||'(sin nombre)';
+  let t='ANÁLISIS DEL MÓDULO 3 · LECTURA DE ESTADOS FINANCIEROS\nEmpresa: '+emp+'\nPeríodos: '+[0,1,2].map(lab).join(', ')+'\n\n';
+  t+=sec('1. MIS TRES HALLAZGOS (análisis horizontal y vertical)',$('ta_h').value);
+  t+=sec('2. LA UTILIDAD Y LA CAJA',$('ta_f').value);
+  t+=sec('3. DIFERENCIAS QUE ENCONTRÉ AL VALIDAR',$('ta_v').value);
+  t+=sec('4. INFORME DEL AUDITOR: ¿SOBRE QUÉ ADVIERTE?',$('ta_aud').value);
+  t+=sec('5. MIS PREGUNTAS Y LOS DOCUMENTOS QUE LE PEDIRÍA AL OFICIAL DE NEGOCIOS',$('ta_q').value);
+  const res=[last.m,last.f,last.vd,last.vv,last.vp,last.vc].filter(Boolean);
+  if(res.length)t+='RESULTADOS CALCULADOS\n\n'+res.join('\n\n')+'\n';
+  return t.trim()+'\n';
+}
+function showComp(){$('out5').textContent=compile();}
+function download(){
+  const txt=compile();const nom=($('emp').value.trim()||'analisis').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'')||'analisis';
+  try{const bl=new Blob(['\ufeff'+txt],{type:'text/plain;charset=utf-8'});const u=URL.createObjectURL(bl);const a=document.createElement('a');a.href=u;a.download='analisis_modulo3_'+nom+'.txt';document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(u);a.remove();},500);$('msg5').textContent='Si no se descargó, usa «Copiar» y pega el texto en un documento.';}
+  catch(e){$('msg5').textContent='No se pudo descargar aquí. Usa «Copiar» y pega el texto en un documento.';}
+}
+function copy(){
+  const txt=compile();
+  const fb=()=>{const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();let ok=false;try{ok=document.execCommand('copy');}catch(e){}ta.remove();$('msg5').textContent=ok?'Copiado. Pégalo en tu documento.':'No se pudo copiar automáticamente: selecciona el texto de abajo y cópialo.';};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(()=>{$('msg5').textContent='Copiado. Pégalo en tu documento.';}).catch(fb);else fb();
+}
+function printIt(){showComp();document.querySelectorAll('.pane').forEach(p=>p.classList.remove('printing'));$('p5').classList.add('printing');window.print();}
+
+/* ---------- Guardado local ---------- */
+const KEY='panel_resolucion_modulo3_v1';
+function fields(){return [...document.querySelectorAll('input[type=text],textarea,select')].filter(e=>e.id);}
+function save(){try{const o={};fields().forEach(e=>{o[e.id]=e.value;});localStorage.setItem(KEY,JSON.stringify(o));}catch(e){}}
+function load(){try{const o=JSON.parse(localStorage.getItem(KEY)||'{}');Object.keys(o).forEach(id=>{const e=$(id);if(e&&e.tagName!=='SELECT')e.value=o[id];});refreshLabels();Object.keys(o).forEach(id=>{const e=$(id);if(e&&e.tagName==='SELECT'&&[...e.options].some(x=>x.value===o[id]))e.value=o[id];});}catch(e){}}
+function clearAll(){
+  if(!confirm('¿Borrar todos los datos y textos de este panel? Esta acción no se puede deshacer.'))return;
+  try{localStorage.removeItem(KEY);}catch(e){}
+  fields().forEach(e=>{if(e.tagName!=='SELECT')e.value='';});
+  Object.keys(last).forEach(k=>last[k]='');
+  ['o_tot','o_h','o_v','o_m','o_f','o_vd','o_vv','o_vp','o_vc'].forEach(id=>$(id).innerHTML='');
+  document.querySelectorAll('td.cv').forEach(c=>c.textContent='—');
+  refreshLabels();showComp();$('msg5').textContent='Todo borrado.';
+}
+
+/* ---------- Eventos ---------- */
+buildData();refreshLabels();load();
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.tabs button').forEach(z=>z.setAttribute('aria-selected',z===b));
+  document.querySelectorAll('.pane').forEach(p=>p.hidden=p.id!==b.dataset.p);
+  if(b.dataset.p==='p5')showComp();
+});
+document.addEventListener('input',e=>{if(/^y[0-3]$/.test(e.target.id))refreshLabels();save();});
+document.addEventListener('change',save);
+document.addEventListener('focusout',e=>{if(e.target.classList&&(e.target.classList.contains('num')||e.target.classList.contains('inl'))&&e.target.id!=='v_tol'){const n=parseNum(e.target.value);if(isFinite(n))e.target.value=fmtAuto(n);else if(e.target.value.trim()!=='')e.target.value='';save();}});
+const click=(id,f)=>$(id).addEventListener('click',f);
+click('b_tot',runTot);click('b_h',runH);click('b_v',runV);click('b_m',runM);click('b_f',runF);
+click('b_vt',runVT);click('b_vd',runVD);click('b_vv',runVV);click('b_ar',runAR);click('b_aa',runAA);click('b_vp',runVP);click('b_vc',runVC);
+click('b_comp',showComp);click('b_dl',download);click('b_cp',copy);click('b_pr',printIt);click('b_clr',clearAll);
+let fz=16;const setFz=v=>{fz=Math.max(13,Math.min(24,v));document.documentElement.style.fontSize=fz+'px';};
+click('fm',()=>setFz(fz-1));click('fp',()=>setFz(fz+1));
+})();
+</script>
+</body>
+</html>
